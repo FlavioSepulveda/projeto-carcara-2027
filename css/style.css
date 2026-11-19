@@ -1,0 +1,427 @@
+/* ============ Base ============ */
+body { font-family: 'Inter', sans-serif; }
+.font-display { font-family: 'Playfair Display', serif; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============ Nav ============ */
+.nav-link { color: #3d2e24; transition: color .2s; position: relative; }
+.nav-link:hover { color: #a96320; }
+.nav-link::after {
+  content: ""; position: absolute; left: 0; bottom: -4px;
+  width: 0; height: 2px; background: #c97f2a; transition: width .25s ease;
+}
+.nav-link:hover::after { width: 100%; }
+
+.mobile-link { display: block; padding: .5rem .75rem; border-radius: .5rem; }
+.mobile-link:hover { background: #f7ead3; }
+
+/* ============ Botões ============ */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: #a96320; color: #fff; font-weight: 600;
+  padding: .55rem 1.25rem; border-radius: 9999px; font-size: .85rem;
+  transition: background .2s, transform .15s;
+}
+.btn-primary:hover { background: #864b1d; transform: translateY(-1px); }
+
+.btn-outline-light {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 1px solid #c97f2a; color: #e3b56d;
+  padding: .5rem 1.1rem; border-radius: 9999px; font-size: .8rem;
+  transition: all .2s;
+}
+.btn-outline-light:hover { background: rgba(201,127,42,.15); color: #fff; }
+
+/* ============ Filtros & View Toggles ============ */
+.filter-btn {
+  white-space: nowrap; padding: 6px 16px; border-radius: 9999px;
+  font-size: .875rem; font-weight: 500; background: #fff;
+  border: 1px solid #eed3a4; color: #3d2e24; transition: all .2s;
+}
+.filter-btn:hover { border-color: #d89844; color: #864b1d; }
+.filter-btn.active { background: #a96320; color: #fff; border-color: #a96320; }
+
+.view-toggle {
+  width: 2rem; height: 2rem; border-radius: 9999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #3d2e24; font-size: .85rem; transition: all .2s;
+}
+.view-toggle:hover { background: #f7ead3; }
+.view-toggle.active { background: #a96320; color: #fff; }
+
+.op-filter {
+  white-space: nowrap; padding: 5px 14px; border-radius: 9999px;
+  font-size: .8rem; font-weight: 500;
+  border: 1px solid rgba(227,181,109,.4); color: #eed3a4;
+  background: transparent; transition: all .2s;
+}
+.op-filter:hover { background: rgba(227,181,109,.1); }
+.op-filter.active { background: #c97f2a; color: #fff; border-color: #c97f2a; }
+
+/* ============ Stories Strip (Instagram style) ============ */
+.story-pill {
+  display: flex; flex-direction: column; align-items: center; gap: .35rem;
+  flex-shrink: 0; cursor: pointer; width: 4.5rem;
+  transition: transform .25s cubic-bezier(.2,.9,.3,1.3);
+}
+.story-pill:hover { transform: translateY(-3px); }
+.story-ring {
+  padding: 2.5px; border-radius: 9999px;
+  background: linear-gradient(135deg, #d89844, #a96320, #5c341c);
+}
+.story-ring.followed {
+  background: linear-gradient(135deg, #e3b56d, #c97f2a);
+}
+.story-avatar {
+  width: 3.3rem; height: 3.3rem; border-radius: 9999px;
+  background: #fdf8f0; border: 2px solid #fdf8f0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.05rem; color: #864b1d;
+  overflow: hidden;
+}
+
+/* ============ Layouts do Feed (Pinterest Masonry vs Instagram Stream) ============ */
+.feed-masonry {
+  column-count: 1;
+  column-gap: 1.25rem;
+}
+@media (min-width: 640px)  { .feed-masonry { column-count: 2; } }
+@media (min-width: 1024px) { .feed-masonry { column-count: 3; } }
+
+.feed-masonry .post-card {
+  break-inside: avoid;
+  margin-bottom: 1.25rem;
+}
+
+.feed-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+/* ============ Cards Feed ============ */
+.post-card {
+  background: #fff; border-radius: 1.15rem; overflow: hidden;
+  border: 1px solid #f7ead3; cursor: pointer; position: relative;
+  opacity: 0;
+  animation: cardReveal .45s cubic-bezier(.2,.9,.3,1.2) forwards;
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.3), box-shadow .3s;
+}
+.post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 36px rgba(26,20,16,.13);
+}
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(16px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.post-card__media {
+  position: relative;
+  overflow: hidden;
+  background: #f7ead3;
+}
+.post-card__image {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.feed-stream .post-card__image {
+  max-height: 540px;
+}
+.post-card:hover .post-card__image {
+  transform: scale(1.03);
+}
+
+/* Overlay estilo Pinterest no hover */
+.post-card__hover-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(26,20,16,.38) 0%, transparent 35%, transparent 65%, rgba(26,20,16,.55) 100%);
+  opacity: 0; transition: opacity .25s ease;
+  pointer-events: none;
+}
+.post-card:hover .post-card__hover-shade { opacity: 1; }
+
+/* Botão Salvar estilo Pinterest */
+.pin-save-btn {
+  background: #a96320; color: #fff;
+  font-size: .72rem; font-weight: 600;
+  padding: .35rem .8rem; border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  transition: transform .15s, background .15s;
+}
+.pin-save-btn:hover { background: #864b1d; transform: scale(1.05); }
+.pin-save-btn.saved { background: #1a1410; color: #e3b56d; }
+
+/* Coração explosivo do duplo clique (Instagram) */
+.dbl-heart {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 4.5rem; color: #fff;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.45));
+  pointer-events: none; z-index: 15;
+}
+.dbl-heart.burst {
+  animation: heartBurst .75s cubic-bezier(.17,.89,.32,1.27) forwards;
+}
+@keyframes heartBurst {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  30%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  65%  { transform: translate(-50%, -50%) scale(.95); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
+}
+
+.post-card__body { padding: .95rem 1rem; }
+.post-card__title { font-weight: 600; font-size: .95rem; line-height: 1.3; color: #1a1410; }
+.post-card__meta {
+  display: flex; align-items: center; gap: .45rem; margin-top: .55rem;
+  font-size: .75rem; color: rgba(61,46,36,.75); flex-wrap: wrap;
+}
+.post-card__tag {
+  position: absolute; top: .75rem; left: .75rem; z-index: 5;
+  background: rgba(26,20,16,.78); color: #fdf8f0;
+  font-size: .625rem; text-transform: uppercase; letter-spacing: .08em;
+  padding: .25rem .625rem; border-radius: 9999px;
+  backdrop-filter: blur(4px);
+}
+.post-card__actions {
+  position: absolute; top: .75rem; right: .75rem; z-index: 5;
+  display: flex; gap: .35rem; align-items: center;
+}
+.icon-btn {
+  width: 2rem; height: 2rem; display: inline-flex;
+  align-items: center; justify-content: center;
+  background: rgba(255,255,255,.92); border-radius: 9999px;
+  font-size: .9rem; box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  transition: transform .15s, background .15s;
+}
+.icon-btn:hover { transform: scale(1.12); background: #fff; }
+.icon-btn.liked { background: #dc2626; color: #fff; }
+
+/* Cabeçalho estilo Instagram no modo Stream */
+.ig-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 1rem; border-bottom: 1px solid #f7ead3;
+}
+.ig-footer-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: .65rem; margin-top: .65rem; border-top: 1px solid #f7ead3;
+}
+
+/* ============ Murais ============ */
+.mural-card {
+  position: relative; aspect-ratio: 1; border-radius: 1rem;
+  overflow: hidden; cursor: pointer; border: 1px solid #f7ead3;
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.3), box-shadow .3s;
+}
+.mural-card:hover { transform: scale(1.02); box-shadow: 0 14px 28px rgba(26,20,16,.15); }
+.mural-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.mural-card:hover img { transform: scale(1.06); }
+.mural-card__overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(26,20,16,.88), transparent 60%);
+  display: flex; flex-direction: column; justify-content: flex-end; padding: .85rem;
+}
+.mural-card__title { color: #fff; font-weight: 600; font-size: .9rem; line-height: 1.2; }
+.mural-card__count { color: #eed3a4; font-size: .75rem; margin-top: .15rem; }
+
+/* ============ Oportunidades ============ */
+.op-card {
+  background: #2a201a; border: 1px solid #3d2e24; border-radius: 1rem;
+  padding: 1.25rem; transition: all .25s;
+}
+.op-card:hover { border-color: rgba(201,127,42,.6); background: rgba(61,46,36,.75); transform: translateY(-4px); }
+.op-card h4 { font-family: 'Playfair Display', serif; font-weight: 700;
+  font-size: 1.125rem; color: #f7ead3; margin-bottom: .5rem; }
+.op-card p { font-size: .875rem; color: rgba(247,234,211,.6); margin-bottom: .75rem; }
+.op-tag {
+  display: inline-block; font-size: .625rem; text-transform: uppercase;
+  letter-spacing: .1em; background: rgba(201,127,42,.2);
+  color: #e3b56d; padding: .25rem .625rem; border-radius: 9999px; margin-bottom: .75rem;
+}
+.op-date { font-size: .75rem; color: #d89844; font-weight: 500; }
+
+/* ============ Artistas ============ */
+.artist-card {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: .5rem; cursor: pointer;
+  padding: .85rem; border-radius: 1rem; border: 1px solid transparent;
+  transition: background .2s, border-color .2s, transform .25s;
+}
+.artist-card:hover { background: #f7ead3; border-color: #eed3a4; transform: translateY(-3px); }
+.artist-card__avatar {
+  width: 4rem; height: 4rem; border-radius: 9999px;
+  object-fit: cover; border: 2px solid #e3b56d;
+  display: flex; align-items: center; justify-content: center;
+  background: #a96320; color: #fff; font-weight: 700; font-size: 1.25rem;
+  transition: transform .3s, box-shadow .3s;
+}
+.artist-card:hover .artist-card__avatar {
+  transform: scale(1.08) rotate(-3deg);
+  box-shadow: 0 6px 20px rgba(201,127,42,.4);
+}
+.artist-card__name { font-size: .8rem; font-weight: 600; }
+
+/* ============ Modais ============ */
+.modal {
+  position: fixed; inset: 0; z-index: 50;
+  display: none; align-items: center; justify-content: center;
+  padding: 1rem;
+  background: rgba(26,20,16,.72); backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+.modal.open { display: flex; }
+.modal-content {
+  background: #fff; border-radius: 1rem; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0,0,0,.4);
+  animation: modalIn .32s cubic-bezier(.2,.9,.3,1.3);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.25rem; border-bottom: 1px solid #f7ead3;
+  position: sticky; top: 0; background: #fff; border-radius: 1rem 1rem 0 0;
+  z-index: 2;
+}
+.modal-close {
+  padding: .4rem .6rem; border-radius: .5rem;
+  color: #3d2e24; transition: background .2s;
+}
+.modal-close:hover { background: #f7ead3; }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============ Form ============ */
+.form-label {
+  display: block; font-size: .75rem; font-weight: 600;
+  color: #3d2e24; margin-bottom: .3rem; text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.form-input {
+  width: 100%; padding: .55rem .85rem;
+  border: 1px solid #eed3a4; border-radius: .65rem;
+  font-size: .875rem; background: #fdf8f0;
+  transition: border .15s, background .15s;
+}
+.form-input:focus {
+  outline: none; border-color: #c97f2a; background: #fff;
+  box-shadow: 0 0 0 3px rgba(201,127,42,.15);
+}
+
+/* ============ Tabs (login/cadastro) ============ */
+.tab {
+  flex: 1; padding: .55rem; font-size: .85rem; font-weight: 600;
+  border-radius: .5rem; color: #3d2e24; transition: all .2s;
+}
+.tab.active { background: #a96320; color: #fff; }
+
+/* ============ Utilitários ============ */
+.line-clamp-1, .line-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-1 { -webkit-line-clamp: 1; }
+.line-clamp-2 { -webkit-line-clamp: 2; }
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #d89844; border-radius: 4px; }
+
+/* ==========================================
+   FIX do hero + Animações
+   ========================================== */
+:root {
+  --carcara-900:#5c341c;
+  --carcara-700:#864b1d;
+  --carcara-600:#a96320;
+  --carcara-500:#c97f2a;
+  --carcara-400:#d89844;
+  --carcara-300:#e3b56d;
+  --carcara-200:#eed3a4;
+  --carcara-100:#f7ead3;
+  --carcara-50:#fdf8f0;
+  --sertao-900:#1a1410;
+  --sertao-800:#2a201a;
+  --sertao-700:#3d2e24;
+}
+
+.hero-section {
+  min-height: 490px;
+  display: flex;
+  align-items: center;
+  background-color: var(--sertao-900) !important;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(216,152,68,.18), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(201,127,42,.12), transparent 40%);
+}
+.hero-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 70% 30%, rgba(227,181,109,.15), transparent 30%);
+}
+.badge-editorial {
+  display: inline-block;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--carcara-300);
+  margin-bottom: 1rem;
+}
+
+.btn-carcara {
+  background: var(--carcara-500);
+  color: var(--sertao-900) !important;
+  border: none;
+  font-weight: 600;
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+.btn-carcara:hover {
+  background: var(--carcara-400);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(201,127,42,.35);
+}
+.btn-outline-carcara {
+  border: 1px solid rgba(227,181,109,.5);
+  color: var(--carcara-100) !important;
+  background: transparent;
+  font-weight: 500;
+  transition: all .2s;
+}
+.btn-outline-carcara:hover {
+  background: rgba(227,181,109,.12);
+  border-color: var(--carcara-300);
+}
+
+@keyframes pulse-like {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.icon-btn.liked { animation: pulse-like .45s ease-out; }
+
+#toast > div { animation: toastIn .3s ease-out; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.btn { position: relative; overflow: hidden; }
+.btn::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,.4) 10%, transparent 10%);
+  transform: scale(10); opacity: 0;
+  transition: transform .5s, opacity .8s;
+}
+.btn:active::after { transform: scale(0); opacity: 1; transition: 0s; }
