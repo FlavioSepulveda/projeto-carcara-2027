@@ -57,19 +57,20 @@
         </a>
 
         <!-- Busca rápida Desktop -->
-        <div class="hidden lg:flex items-center relative w-72">
+        <div class="hidden lg:flex items-center relative w-64">
           <i class="bi bi-search absolute left-3 text-sertao-700/50 text-xs"></i>
           <input id="feedSearch" type="search" placeholder="Buscar obras, artistas, cidades..."
                  class="w-full pl-8 pr-3 py-1.5 rounded-full text-xs bg-white border border-carcara-200 focus:outline-none focus:border-carcara-500 transition" />
         </div>
 
         <!-- Nav Desktop -->
-        <ul class="hidden md:flex items-center gap-5 text-sm font-medium">
+        <ul class="hidden md:flex items-center gap-4 text-sm font-medium">
           <li><a href="#feed" class="nav-link">Feed</a></li>
           <li><a href="#murais" class="nav-link">Murais</a></li>
           <li><a href="#portfolio" class="nav-link">Portfólio</a></li>
           <li><a href="#oportunidades" class="nav-link">Oportunidades</a></li>
           <li><a href="#artistas" class="nav-link">Artistas</a></li>
+          <li><a href="#licenca" class="nav-link text-carcara-700 font-semibold">Licença</a></li>
 
           <!-- Botão de sessão -->
           <li id="sessionArea" class="flex items-center gap-2"></li>
@@ -95,6 +96,7 @@
           <li><a href="#portfolio" class="mobile-link">Portfólio</a></li>
           <li><a href="#oportunidades" class="mobile-link">Oportunidades</a></li>
           <li><a href="#artistas" class="mobile-link">Artistas</a></li>
+          <li><a href="#licenca" class="mobile-link font-semibold text-carcara-700">Solicitar Licença</a></li>
           <li id="sessionAreaMobile" class="mt-2"></li>
         </ul>
       </div>
@@ -111,15 +113,15 @@
             Onde a arte do <span style="color:#d89844;">Piauí</span> encontra seu voo.
           </h2>
           <p class="lead mb-4" style="color:rgba(247,234,211,.8);">
-            Um ninho para artistas visuais piauienses compartilharem processos, referências e oportunidades.
+            Um ninho curado para artistas visuais piauienses licenciados compartilharem processos, referências e oportunidades.
           </p>
           <div class="d-flex flex-wrap gap-3">
             <button id="heroExplore" class="btn btn-carcara btn-lg rounded-pill px-4" data-aos="zoom-in" data-aos-delay="100">
               Explorar o Feed
             </button>
-            <button id="heroPortfolio" class="btn btn-outline-carcara btn-lg rounded-pill px-4" data-aos="zoom-in" data-aos-delay="200">
-              Criar meu Portfólio
-            </button>
+            <a href="#licenca" class="btn btn-outline-carcara btn-lg rounded-pill px-4" data-aos="zoom-in" data-aos-delay="200">
+              Solicitar Licença de Artista
+            </a>
           </div>
         </div>
       </div>
@@ -127,7 +129,7 @@
     <div class="hero-decor"></div>
   </section>
 
-  <!-- ================= STORIES / ATELIÊS ATIVOS (Instagram vibe) ================= -->
+  <!-- ================= STORIES / ATELIÊS ATIVOS ================= -->
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
     <div class="flex items-center justify-between mb-3">
       <span class="text-[11px] uppercase tracking-widest font-semibold text-sertao-700/60">Ateliês em atividade</span>
@@ -145,7 +147,6 @@
       </div>
 
       <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-        <!-- Filtros de técnica -->
         <div class="flex gap-2 overflow-x-auto pb-2 -mb-2">
           <button data-filter="all" class="filter-btn active">Todos</button>
           <button data-filter="pintura" class="filter-btn">Pintura</button>
@@ -155,7 +156,6 @@
           <button data-filter="3d" class="filter-btn">3D</button>
         </div>
 
-        <!-- Ordenação & Alternador Pinterest / Instagram -->
         <div class="flex items-center gap-1.5 bg-white border border-carcara-200 rounded-full p-1">
           <select id="feedSort" aria-label="Ordenar feed"
                   class="text-xs bg-transparent pl-2 pr-1 py-1 text-sertao-800 font-medium focus:outline-none cursor-pointer">
@@ -196,7 +196,7 @@
     </p>
     <div id="portfolioGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     <p id="portfolioEmpty" class="hidden text-center text-sertao-700/60 py-12">
-      Faça login e marque posts como "Destaque no portfólio" (★) para aparecerem aqui.
+      Artistas licenciados podem marcar obras como "Destaque no portfólio" (★) para aparecerem aqui.
     </p>
   </section>
 
@@ -211,7 +211,6 @@
         <button id="newOportunidadeBtn" class="btn-outline-light">+ Sugerir edital</button>
       </div>
 
-      <!-- Filtros -->
       <div class="flex gap-2 overflow-x-auto pb-3 mb-6">
         <button data-op="all" class="op-filter active">Todos</button>
         <button data-op="edital" class="op-filter">Editais</button>
@@ -228,6 +227,107 @@
   <section id="artistas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
     <h3 class="font-display text-2xl sm:text-3xl font-bold mb-8">Artistas do ninho</h3>
     <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"></div>
+  </section>
+
+  <!-- ================= SOLICITAR LICENÇA DE ARTISTA ================= -->
+  <section id="licenca" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-carcara-200">
+    <div class="bg-white rounded-3xl border border-carcara-200 shadow-sm overflow-hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12">
+
+        <!-- Coluna informativa + Status da Conta -->
+        <div class="lg:col-span-5 bg-sertao-900 text-carcara-50 p-7 sm:p-10 flex flex-col justify-between">
+          <div>
+            <span class="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest bg-carcara-600/30 text-carcara-300 px-3 py-1 rounded-full mb-4">
+              <i class="bi bi-patch-check-fill"></i> Curadoria Comunitária
+            </span>
+            <h3 class="font-display text-2xl sm:text-3xl font-bold text-carcara-100 mb-3">
+              Licença de Artista Carcará
+            </h3>
+            <p class="text-sm text-carcara-100/75 leading-relaxed mb-6">
+              Para manter a qualidade curatorial e valorizar a produção visual do Piauí, apenas perfis com <strong>Licença Ativa</strong> podem publicar obras no feed e montar portfólio.
+            </p>
+
+            <ul class="space-y-3 text-xs text-carcara-100/80 mb-8">
+              <li class="flex items-start gap-2.5">
+                <i class="bi bi-check-circle-fill text-carcara-400 mt-0.5"></i>
+                <span>Aberto a estudantes, pesquisadores e artistas visuais atuantes ou naturais do Piauí.</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <i class="bi bi-check-circle-fill text-carcara-400 mt-0.5"></i>
+                <span>Visitantes sem licença podem explorar o feed, curtir, comentar e criar murais livremente.</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <i class="bi bi-check-circle-fill text-carcara-400 mt-0.5"></i>
+                <span>Selo de verificado (<i class="bi bi-patch-check-fill text-carcara-400"></i>) exibido no perfil e nas obras publicadas.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Painel dinâmico do status da licença do usuário -->
+          <div id="licenseStatusBox" class="rounded-2xl bg-sertao-800 border border-sertao-700 p-4"></div>
+        </div>
+
+        <!-- Coluna do Formulário de Solicitação -->
+        <div class="lg:col-span-7 p-7 sm:p-10">
+          <h4 class="font-display text-xl font-bold text-sertao-900 mb-1">Solicitar credenciamento</h4>
+          <p class="text-xs text-sertao-700/70 mb-6">
+            Preencha os dados abaixo para avaliar sua entrada como artista publicador no Carcará.
+          </p>
+
+          <form id="licenseForm" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Nome artístico completo</label>
+                <input id="licName" name="artistName" type="text" required class="form-input" placeholder="Ex: Maria do Socorro" />
+              </div>
+              <div>
+                <label class="form-label">E-mail da conta</label>
+                <input id="licEmail" name="email" type="email" required class="form-input" placeholder="voce@email.com" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Município no Piauí</label>
+                <input name="city" type="text" required class="form-input" placeholder="Ex: Teresina, Parnaíba, Oeiras..." />
+              </div>
+              <div>
+                <label class="form-label">Linguagem principal</label>
+                <select name="specialty" class="form-input">
+                  <option value="pintura">Pintura / Desenho</option>
+                  <option value="gravura">Gravura / Xilogravura</option>
+                  <option value="ceramica">Cerâmica / Escultura</option>
+                  <option value="fotografia">Fotografia / Audiovisual</option>
+                  <option value="3d">Arte Digital / 3D</option>
+                  <option value="mista">Técnica Mista / Instalação</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Link de portfólio, Instagram ou Behance</label>
+              <input name="portfolioUrl" type="url" required class="form-input" placeholder="https://instagram.com/seuatelie" />
+            </div>
+
+            <div>
+              <label class="form-label">Breve trajetória ou vínculo com artes visuais</label>
+              <textarea name="statement" rows="3" required class="form-input"
+                        placeholder="Conte sobre sua pesquisa artística, coletivo ou formação..."></textarea>
+            </div>
+
+            <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+              <span class="text-[11px] text-sertao-700/60">
+                <i class="bi bi-shield-check text-carcara-600"></i> Avaliação pela curadoria Carcará
+              </span>
+              <button type="submit" id="licenseSubmitBtn" class="btn-primary px-6 py-2.5">
+                Enviar solicitação de licença 🦅
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
   </section>
 
   <!-- ================= FOOTER ================= -->
@@ -274,6 +374,33 @@
           <p id="authError" class="text-red-600 text-xs hidden"></p>
           <button type="submit" class="btn-primary w-full justify-center">Continuar</button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Aviso: Licença Necessária -->
+  <div id="licenseRequiredModal" class="modal hidden">
+    <div class="modal-content max-w-md">
+      <div class="modal-header">
+        <h4 class="font-display font-bold text-lg">Licença de Artista necessária</h4>
+        <button class="modal-close" data-close="licenseRequiredModal">✕</button>
+      </div>
+      <div class="p-6 text-center space-y-4">
+        <div class="w-14 h-14 rounded-full bg-carcara-100 text-carcara-700 flex items-center justify-center text-2xl mx-auto">
+          <i class="bi bi-patch-exclamation-fill"></i>
+        </div>
+        <h5 class="font-display font-bold text-lg text-sertao-900">Publicação restrita a artistas licenciados</h5>
+        <p id="licenseRequiredText" class="text-xs text-sertao-700/80 leading-relaxed">
+          Sua conta ainda não possui licença ativa para publicar obras no Carcará. Você pode continuar curtindo, comentando e salvando referências nos murais.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+          <a href="#licenca" id="goToLicenseBtn" class="btn-primary justify-center">
+            Solicitar minha licença
+          </a>
+          <button class="px-4 py-2 rounded-full text-xs font-semibold border border-carcara-200 hover:bg-carcara-100" data-close="licenseRequiredModal">
+            Agora não
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -326,7 +453,7 @@
     </div>
   </div>
 
-  <!-- Modal de Post (visualizar + comentários + salvar em mural) -->
+  <!-- Modal de Post -->
   <div id="postModal" class="modal hidden">
     <div class="modal-content max-w-2xl">
       <div class="modal-header">

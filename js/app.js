@@ -1,5 +1,5 @@
 /* ==========================================
-   Carcará — Lógica principal (Pinterest + Instagram)
+   Carcará — Lógica principal (Pinterest + Instagram + Licença de Artista)
    ========================================== */
 
 const App = (() => {
@@ -10,7 +10,7 @@ const App = (() => {
   let currentSort   = 'recent';
   let currentSearch = '';
   let currentArtistFilter = null;
-  let feedLayout    = 'masonry'; // 'masonry' (Pinterest) | 'stream' (Instagram)
+  let feedLayout    = 'masonry';
 
   // ---------- Toast & Modais ----------
   function toast(msg) {
@@ -18,7 +18,7 @@ const App = (() => {
     t.querySelector('div').textContent = msg;
     t.classList.remove('hidden');
     clearTimeout(toast._tid);
-    toast._tid = setTimeout(() => t.classList.add('hidden'), 2600);
+    toast._tid = setTimeout(() => t.classList.add('hidden'), 2800);
   }
 
   function openModal(id) {
@@ -36,6 +36,28 @@ const App = (() => {
   function closeAllModals() {
     $$('.modal.open').forEach(m => m.classList.remove('open'));
     document.body.style.overflow = '';
+  }
+
+  // ---------- Verificação de Permissão para Publicar ----------
+  function handlePublishAttempt() {
+    const user = Auth.getUser();
+    if (!user) {
+      openModal('authModal');
+      toast('Entre na sua conta primeiro 🦅');
+      return;
+    }
+    if (!Auth.hasLicense()) {
+      const req = DB.getUserLicenseRequest(user.id) || DB.getUserLicenseRequest(user.email);
+      const txt = $('#licenseRequiredText');
+      if (txt) {
+        txt.textContent = req && req.status === 'pending'
+          ? 'Sua solicitação de licença já foi enviada e está em análise. Assim que aprovada, o botão de publicar será liberado!'
+          : 'Apenas artistas com Licença Carcará ativa podem publicar obras no feed. Solicite a sua gratuitamente na seção abaixo.';
+      }
+      openModal('licenseRequiredModal');
+      return;
+    }
+    openModal('publishModal');
   }
 
   async function imageFromStorage(post) {
@@ -92,22 +114,39 @@ const App = (() => {
       if (desktop) desktop.innerHTML = html;
       if (mobile)  mobile.innerHTML = `<button data-open="authModal" class="w-full bg-carcara-600 text-white px-4 py-2 rounded-full text-sm font-semibold">Entrar</button>`;
     } else {
-      const initial = user.name.charAt(0).toUpperCase();
+      const initial  = user.name.charAt(0).toUpperCase();
+      const licensed = Auth.hasLicense();
+
+      const actionBtnDesktop = licensed
+        ? `<button id="publishTriggerBtn" class="bg-carcara-600 hover:bg-carcara-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold transition">+ Publicar</button>`
+        : `<a href="#licenca" class="bg-carcara-100 hover:bg-carcara-200 text-carcara-800 border border-carcara-300 px-3 py-1.5 rounded-full text-xs font-semibold transition">Pedir Licença</a>`;
+
+      const actionBtnMobile = licensed
+        ? `<button id="publishTriggerBtnMobile" class="w-full mt-1 bg-carcara-600 text-white px-4 py-2 rounded-full text-sm font-semibold">+ Publicar</button>`
+        : `<a href="#licenca" class="block text-center w-full mt-1 bg-carcara-100 text-carcara-800 border border-carcara-300 px-4 py-2 rounded-full text-sm font-semibold">Solicitar Licença para Publicar</a>`;
+
       if (desktop) desktop.innerHTML = `
         <div class="flex items-center gap-2">
-          <button data-open="publishModal" class="bg-carcara-600 hover:bg-carcara-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold transition">+ Publicar</button>
+          ${actionBtnDesktop}
           <div class="flex items-center gap-1.5">
-            <button id="myProfileBtn" title="Meu perfil" class="w-8 h-8 rounded-full bg-carcara-600 text-white flex items-center justify-center text-xs font-bold hover:scale-105 transition">${initial}</button>
+            <button id="myProfileBtn" title="${licensed ? 'Artista Licenciado' : 'Visitante (sem licença)'}"
+                    class="relative w-8 h-8 rounded-full bg-carcara-600 text-white flex items-center justify-center text-xs font-bold hover:scale-105 transition">
+              ${initial}
+              ${licensed ? `<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-carcara-50 text-[8px] flex items-center justify-center">✓</span>` : ''}
+            </button>
             <button id="logoutBtn" class="text-xs text-sertao-700/60 hover:text-red-600">Sair</button>
           </div>
         </div>`;
+
       if (mobile) mobile.innerHTML = `
         <div class="px-3 py-2 flex items-center justify-between">
-          <span class="text-xs font-semibold">${user.name}</span>
+          <span class="text-xs font-semibold">${user.name} ${licensed ? '✓' : '(Visitante)'}</span>
           <button id="logoutBtnMobile" class="text-xs text-red-600">Sair</button>
         </div>
-        <button data-open="publishModal" class="w-full mt-1 bg-carcara-600 text-white px-4 py-2 rounded-full text-sm font-semibold">+ Publicar</button>`;
+        ${actionBtnMobile}`;
 
+      $('#publishTriggerBtn')?.addEventListener('click', handlePublishAttempt);
+      $('#publishTriggerBtnMobile')?.addEventListener('click', handlePublishAttempt);
       $('#myProfileBtn')?.addEventListener('click', () => openArtistProfile(user.id));
 
       ['#logoutBtn', '#logoutBtnMobile'].forEach(sel => {
@@ -125,11 +164,123 @@ const App = (() => {
     });
   }
 
-  // ---------- Stories Strip (Instagram style) ----------
+  // ---------- Seção de Licença (Status + Formulário) ----------
+  function renderLicenseSection() {
+    const box = $('#licenseStatusBox');
+    const nameInput  = $('#licName');
+    const emailInput = $('#licEmail');
+    if (!box) return;
+
+    const user = Auth.getUser();
+
+    if (user) {
+      if (nameInput && !nameInput.value) nameInput.value = user.name;
+      if (emailInput && !emailInput.value) emailInput.value = user.email;
+    }
+
+    if (!user) {
+      box.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-[11px] uppercase tracking-wider text-carcara-300 font-semibold">Status atual</p>
+            <p class="text-sm font-bold text-white mt-0.5">Visitante não autenticado</p>
+            <p class="text-xs text-carcara-100/70 mt-1">Crie sua conta gratuita para vincular sua solicitação de licença.</p>
+          </div>
+          <button data-open="authModal" class="btn-primary text-xs shrink-0">Entrar</button>
+        </div>`;
+      $$('[data-open]', box).forEach(b => b.onclick = () => openModal(b.dataset.open));
+      return;
+    }
+
+    if (Auth.hasLicense()) {
+      box.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shrink-0">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">Licença Ativa</p>
+            <p class="text-sm font-bold text-white mt-0.5">${user.name} — Artista Verificado</p>
+            <p class="text-xs text-carcara-100/70 mt-1">Você já pode publicar processos no feed e destacar obras no portfólio.</p>
+            <button id="licenseBoxPublishBtn" class="mt-3 bg-carcara-500 hover:bg-carcara-400 text-sertao-900 font-semibold text-xs px-4 py-1.5 rounded-full transition">
+              + Publicar obra agora
+            </button>
+          </div>
+        </div>`;
+      $('#licenseBoxPublishBtn')?.addEventListener('click', handlePublishAttempt);
+      return;
+    }
+
+    const req = DB.getUserLicenseRequest(user.id) || DB.getUserLicenseRequest(user.email);
+
+    if (req && req.status === 'pending') {
+      box.innerHTML = `
+        <div class="space-y-2.5">
+          <div class="flex items-center gap-2 text-amber-300 text-xs font-semibold uppercase tracking-wider">
+            <i class="bi bi-hourglass-split"></i> Solicitação em análise
+          </div>
+          <p class="text-sm font-bold text-white">Pedido enviado por ${req.artistName}</p>
+          <p class="text-xs text-carcara-100/70">
+            Município: <strong>${req.city}</strong> • Linguagem: <span class="capitalize">${req.specialty}</span>.
+          </p>
+          <div class="pt-2 border-t border-sertao-700 flex items-center justify-between gap-2 flex-wrap">
+            <span class="text-[11px] text-carcara-100/50">Validação rápida para testes:</span>
+            <button id="demoApproveLicenseBtn" class="bg-emerald-500 hover:bg-emerald-400 text-sertao-900 font-bold text-xs px-3 py-1 rounded-full transition">
+              Aprovar Licença (Demo) ✓
+            </button>
+          </div>
+        </div>`;
+
+      $('#demoApproveLicenseBtn')?.addEventListener('click', () => {
+        DB.approveLicenseRequest(user.id);
+        renderAll();
+        toast('Parabéns! Sua Licença de Artista foi aprovada 🦅');
+      });
+      return;
+    }
+
+    box.innerHTML = `
+      <div>
+        <p class="text-[11px] uppercase tracking-wider text-amber-300 font-semibold">Conta sem licença</p>
+        <p class="text-sm font-bold text-white mt-0.5">${user.name} (Modo Leitor)</p>
+        <p class="text-xs text-carcara-100/70 mt-1">Preencha o formulário ao lado para liberar a publicação de obras.</p>
+      </div>`;
+  }
+
+  function initLicenseForm() {
+    const form = $('#licenseForm');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = Auth.getUser();
+      const data = Object.fromEntries(new FormData(form));
+
+      DB.submitLicenseRequest({
+        userId: user ? user.id : null,
+        artistName: data.artistName,
+        email: data.email,
+        city: data.city,
+        specialty: data.specialty,
+        portfolioUrl: data.portfolioUrl,
+        statement: data.statement,
+      });
+
+      renderLicenseSection();
+      toast('Solicitação enviada! Acompanhe o status no painel ao lado 🦅');
+    });
+
+    $('#goToLicenseBtn')?.addEventListener('click', () => {
+      closeModal('licenseRequiredModal');
+    });
+  }
+
+  // ---------- Stories Strip ----------
   function renderStories() {
     const strip = $('#storiesStrip');
     if (!strip) return;
-    const users = DB.getUsers();
+    // Exibe apenas artistas licenciados nos ateliês ativos
+    const artists = DB.getUsers().filter(u => u.licensed);
     const me = Auth.getUser();
 
     const allPill = `
@@ -140,7 +291,7 @@ const App = (() => {
         <span class="text-[11px] font-medium text-sertao-800 line-clamp-1">Todos</span>
       </div>`;
 
-    const userPills = users.map(u => {
+    const userPills = artists.map(u => {
       const initial = (u.name || '?').charAt(0).toUpperCase();
       const active = currentArtistFilter === u.id;
       const following = me ? DB.isFollowing(me.id, u.id) : false;
@@ -165,7 +316,7 @@ const App = (() => {
     });
   }
 
-  // ---------- Feed (Pinterest Masonry + Instagram Stream) ----------
+  // ---------- Feed ----------
   async function renderFeed() {
     const grid = $('#feedGrid');
     const empty = $('#feedEmpty');
@@ -218,7 +369,10 @@ const App = (() => {
           <div class="flex items-center gap-2.5 artist-trigger" data-artist="${p.artistId}">
             <div class="w-8 h-8 rounded-full bg-carcara-600 text-white flex items-center justify-center text-xs font-bold">${initial}</div>
             <div class="leading-tight">
-              <p class="text-xs font-semibold text-sertao-900 hover:text-carcara-700">${p.artist}</p>
+              <p class="text-xs font-semibold text-sertao-900 hover:text-carcara-700 flex items-center gap-1">
+                <span>${p.artist}</span>
+                <i class="bi bi-patch-check-fill text-carcara-600 text-[11px]" title="Artista Licenciado"></i>
+              </p>
               <p class="text-[11px] text-sertao-700/60">${p.location || 'Piauí'} • ${timeAgo(p.createdAt)}</p>
             </div>
           </div>
@@ -241,7 +395,9 @@ const App = (() => {
           </button>
         </div>` : `
         <div class="post-card__meta">
-          <span class="artist-trigger hover:underline font-medium" data-artist="${p.artistId}">🎨 ${p.artist}</span>
+          <span class="artist-trigger hover:underline font-medium inline-flex items-center gap-1" data-artist="${p.artistId}">
+            🎨 ${p.artist} <i class="bi bi-patch-check-fill text-carcara-600 text-[10px]" title="Artista Licenciado"></i>
+          </span>
           <span>•</span>
           <span>${p.location || 'Piauí'}</span>
           <span class="ml-auto flex items-center gap-2">
@@ -268,7 +424,6 @@ const App = (() => {
           ${igBottom}
         </div>`;
 
-      // Clique simples abre detalhes / Duplo clique na imagem dá like estilo Instagram
       const media = card.querySelector('.post-card__media');
       let clickTimer = null;
       media.addEventListener('click', (e) => {
@@ -297,7 +452,6 @@ const App = (() => {
         });
       });
 
-      // Curtir (botão flutuante ou barra inferior)
       const handleLike = (e) => {
         e.stopPropagation();
         const activeUser = Auth.getUser();
@@ -308,13 +462,11 @@ const App = (() => {
       card.querySelector('.like-btn')?.addEventListener('click', handleLike);
       card.querySelector('.stream-like-btn')?.addEventListener('click', handleLike);
 
-      // Salvar no mural (Pinterest)
       card.querySelector('[data-save-pin]')?.addEventListener('click', (e) => {
         e.stopPropagation();
         openSavePinModal(p.id);
       });
 
-      // Destaque no portfólio
       const favBtn = card.querySelector('.fav-btn');
       if (favBtn) favBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -361,7 +513,7 @@ const App = (() => {
     }
   }
 
-  // ---------- Modal de Detalhes do Post + Comentários ----------
+  // ---------- Modal de Detalhes do Post ----------
   async function showPost(p) {
     const imgUrl   = await imageFromStorage(p);
     const user     = Auth.getUser();
@@ -380,7 +532,10 @@ const App = (() => {
             ${(p.artist || '?').charAt(0).toUpperCase()}
           </div>
           <div>
-            <p class="text-sm font-semibold hover:text-carcara-700">${p.artist}</p>
+            <p class="text-sm font-semibold hover:text-carcara-700 flex items-center gap-1">
+              <span>${p.artist}</span>
+              <i class="bi bi-patch-check-fill text-carcara-600 text-xs" title="Artista Licenciado"></i>
+            </p>
             <p class="text-xs text-sertao-700/60">${p.location || 'Piauí'} • <span class="capitalize">${p.tag}</span></p>
           </div>
         </div>
@@ -451,7 +606,7 @@ const App = (() => {
     openModal('postModal');
   }
 
-  // ---------- Salvar Pin em Mural (Pinterest) ----------
+  // ---------- Salvar Pin em Mural ----------
   function openSavePinModal(postId) {
     if (!Auth.isLogged()) {
       openModal('authModal');
@@ -622,14 +777,17 @@ const App = (() => {
   function renderArtistas() {
     const grid = $('#artistasGrid');
     if (!grid) return;
-    const users = DB.getUsers();
-    grid.innerHTML = users.map(u => {
+    // Lista artistas licenciados na vitrine do ninho
+    const artists = DB.getUsers().filter(u => u.licensed);
+    grid.innerHTML = artists.map(u => {
       const initial = (u.name || '?').charAt(0).toUpperCase();
       const followers = DB.getFollowersCount(u.id);
       return `
         <div class="artist-card" data-artist-card="${u.id}">
           <div class="artist-card__avatar">${initial}</div>
-          <span class="artist-card__name line-clamp-1">${u.name}</span>
+          <span class="artist-card__name line-clamp-1 flex items-center justify-center gap-1">
+            ${u.name} <i class="bi bi-patch-check-fill text-carcara-600 text-[11px]" title="Artista Licenciado"></i>
+          </span>
           <span class="text-[10px] text-sertao-700/60 line-clamp-1">${u.bio || 'Artista'}</span>
           <span class="text-[10px] font-semibold text-carcara-700">${followers} seguidores</span>
         </div>`;
@@ -667,8 +825,13 @@ const App = (() => {
         <div class="flex items-center gap-3">
           <div class="w-14 h-14 rounded-full bg-carcara-600 text-white flex items-center justify-center text-xl font-bold">${initial}</div>
           <div>
-            <h5 class="font-display font-bold text-lg">${artist.name}</h5>
-            <p class="text-xs text-sertao-700/70">${artist.bio || 'Artista piauiense'}</p>
+            <h5 class="font-display font-bold text-lg flex items-center gap-1.5">
+              <span>${artist.name}</span>
+              ${artist.licensed
+                ? `<span class="text-[10px] font-body uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Licenciado ✓</span>`
+                : `<span class="text-[10px] font-body uppercase tracking-wider px-2 py-0.5 rounded-full bg-carcara-100 text-carcara-800 font-semibold">Visitante</span>`}
+            </h5>
+            <p class="text-xs text-sertao-700/70">${artist.bio || 'Comunidade Carcará'}</p>
             <p class="text-xs text-carcara-700 font-semibold mt-1">${posts.length} obras • <span id="artistFollowersCount">${followers}</span> seguidores</p>
           </div>
         </div>
@@ -682,7 +845,7 @@ const App = (() => {
         <h6 class="text-xs font-bold uppercase tracking-wider text-sertao-700/70 mb-3">Obras publicadas</h6>
         ${worksHtml.length
           ? `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${worksHtml.join('')}</div>`
-          : `<p class="text-xs text-sertao-700/60">Nenhuma obra publicada ainda.</p>`}
+          : `<p class="text-xs text-sertao-700/60">${artist.licensed ? 'Nenhuma obra publicada ainda.' : 'Este perfil ainda não possui licença para publicar obras.'}</p>`}
       </div>
     `;
 
@@ -755,7 +918,7 @@ const App = (() => {
     });
   }
 
-  // ---------- Publish form + Preview instantâneo ----------
+  // ---------- Publish form (Protegido por Licença) ----------
   function initPublishForm() {
     const form = $('#publishForm');
     if (!form) return;
@@ -775,6 +938,11 @@ const App = (() => {
       e.preventDefault();
       const user = Auth.getUser();
       if (!user) { closeModal('publishModal'); openModal('authModal'); return; }
+      if (!Auth.hasLicense()) {
+        closeModal('publishModal');
+        openModal('licenseRequiredModal');
+        return;
+      }
 
       const data = new FormData(form);
       const file = data.get('image');
@@ -910,10 +1078,6 @@ const App = (() => {
     $('#heroExplore')?.addEventListener('click', () => {
       document.getElementById('feed').scrollIntoView({ behavior: 'smooth' });
     });
-    $('#heroPortfolio')?.addEventListener('click', () => {
-      if (!Auth.isLogged()) { openModal('authModal'); return; }
-      document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth' });
-    });
   }
 
   // ---------- Smooth scroll ----------
@@ -930,6 +1094,7 @@ const App = (() => {
   // ---------- Render geral ----------
   function renderAll() {
     renderSessionArea();
+    renderLicenseSection();
     renderStories();
     renderFeed();
     renderPortfolio();
@@ -943,6 +1108,7 @@ const App = (() => {
     initModals();
     initFilters();
     initAuthForm();
+    initLicenseForm();
     initPublishForm();
     initMuralForm();
     initOpForm();

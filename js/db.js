@@ -5,14 +5,15 @@
 
 const DB = (() => {
   const KEYS = {
-    users:    'carcara:users',
-    session:  'carcara:session',
-    posts:    'carcara:posts',
-    murais:   'carcara:murais',
-    editais:  'carcara:editais',
-    likes:    'carcara:likes',
-    comments: 'carcara:comments',
-    follows:  'carcara:follows',
+    users:           'carcara:users',
+    session:         'carcara:session',
+    posts:           'carcara:posts',
+    murais:          'carcara:murais',
+    editais:         'carcara:editais',
+    likes:           'carcara:likes',
+    comments:        'carcara:comments',
+    follows:         'carcara:follows',
+    licenseRequests: 'carcara:license_requests',
   };
 
   // ---------- Helpers localStorage ----------
@@ -31,6 +32,7 @@ const DB = (() => {
           password: '1234',
           avatar: null,
           bio: 'Estudante de Artes Visuais • Teresina 🎨',
+          licensed: true,
         },
         {
           id: 'clara',
@@ -39,6 +41,7 @@ const DB = (() => {
           password: '1234',
           avatar: null,
           bio: 'Ceramista e pesquisadora de barro do Poti 🏺',
+          licensed: true,
         },
         {
           id: 'joao',
@@ -47,6 +50,7 @@ const DB = (() => {
           password: '1234',
           avatar: null,
           bio: 'Xilogravura e memória sertaneja 🪵',
+          licensed: true,
         }
       ]);
     }
@@ -121,12 +125,71 @@ const DB = (() => {
   const saveUsers   = (u) => write(KEYS.users, u);
   const findUser    = (email) => getUsers().find(u => u.email === email);
   const getUserById = (id) => getUsers().find(u => u.id === id);
-  const addUser     = (user) => {
+
+  // Novos cadastros começam como visitantes (licensed: false) até solicitarem/receberem licença
+  const addUser = (user) => {
     const users = getUsers();
-    const newUser = { ...user, id: genId(), avatar: null, bio: 'Artista visual no Piauí 🦅' };
+    const newUser = {
+      ...user,
+      id: genId(),
+      avatar: null,
+      bio: 'Membro da comunidade Carcará 🦅',
+      licensed: false,
+    };
     users.push(newUser);
     saveUsers(users);
     return newUser;
+  };
+
+  const setUserLicensed = (userId, status = true, bioUpdate = null) => {
+    const users = getUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx < 0) return null;
+    users[idx].licensed = status;
+    if (bioUpdate) users[idx].bio = bioUpdate;
+    saveUsers(users);
+
+    const session = getSession();
+    if (session && session.id === userId) {
+      setSession({ ...session, licensed: status, bio: users[idx].bio });
+    }
+    return users[idx];
+  };
+
+  // ---------- License Requests ----------
+  const getLicenseRequests = () => read(KEYS.licenseRequests);
+
+  const getUserLicenseRequest = (emailOrId) =>
+    getLicenseRequests().find(r => r.userId === emailOrId || r.email === emailOrId);
+
+  const submitLicenseRequest = (payload) => {
+    const list = getLicenseRequests().filter(
+      r => r.email !== payload.email && (!payload.userId || r.userId !== payload.userId)
+    );
+    const req = {
+      id: genId(),
+      status: 'pending',
+      createdAt: Date.now(),
+      ...payload,
+    };
+    list.push(req);
+    write(KEYS.licenseRequests, list);
+    return req;
+  };
+
+  const approveLicenseRequest = (emailOrId) => {
+    const list = getLicenseRequests();
+    const req = list.find(r => r.userId === emailOrId || r.email === emailOrId);
+    if (req) {
+      req.status = 'approved';
+      write(KEYS.licenseRequests, list);
+    }
+    const users = getUsers();
+    const user = users.find(u => u.id === emailOrId || u.email === emailOrId);
+    if (user) {
+      const bio = req ? `Artista visual • ${req.city} (${req.specialty}) 🎨` : user.bio;
+      setUserLicensed(user.id, true, bio);
+    }
   };
 
   // ---------- Session ----------
@@ -205,7 +268,7 @@ const DB = (() => {
     return true;
   };
 
-  // ---------- Murais (Pinterest Boards) ----------
+  // ---------- Murais ----------
   const getMurais = () => read(KEYS.murais).map(m => ({
     ...m,
     postIds: Array.isArray(m.postIds) ? m.postIds : [],
@@ -296,7 +359,8 @@ const DB = (() => {
   seed();
 
   return {
-    getUsers, findUser, getUserById, addUser, saveUsers,
+    getUsers, findUser, getUserById, addUser, saveUsers, setUserLicensed,
+    getLicenseRequests, getUserLicenseRequest, submitLicenseRequest, approveLicenseRequest,
     getSession, setSession, clearSession,
     getPosts, addPost, updatePost, deletePost,
     toggleLike, hasLiked,
