@@ -1,10 +1,11 @@
 import { CONFIG } from './config.js';
 import { DB } from './db.js';
 import { Auth, openAuthDialog } from './auth.js';
-import { $, $$, toast, openDialog, closeDialog } from './ui.js';
+import { $, $$, toast, openDialog, closeDialog, timeAgo } from './ui.js';
 import { openMessagesDialog } from './messages.js';
 
 let currentOpFilter = 'all';
+let currentStudentFilter = 'all';
 
 async function resolveAvatarHtml(user, sizeClass = 'w-16 h-16 text-2xl') {
   if (user.avatarKey) {
@@ -12,6 +13,9 @@ async function resolveAvatarHtml(user, sizeClass = 'w-16 h-16 text-2xl') {
     if (url) {
       return `<img src="${url}" alt="${user.name}" class="${sizeClass} rounded-full object-cover border-2 border-carcara-300 shrink-0 shadow-sm" />`;
     }
+  }
+  if (user.avatarUrl) {
+    return `<img src="${user.avatarUrl}" alt="${user.name}" class="${sizeClass} rounded-full object-cover border-2 border-carcara-300 shrink-0 shadow-sm" />`;
   }
   return `
     <div class="${sizeClass} rounded-full bg-carcara-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm border-2 border-carcara-300">
@@ -106,6 +110,132 @@ export function initOportunidadesControls() {
   });
 }
 
+// ======================================================
+// ÁREA DOS ESTUDANTES (Mural Acadêmico & Troca de Materiais)
+// ======================================================
+export function renderStudentBoard() {
+  const grid = $('#studentBoardGrid');
+  if (!grid) return;
+
+  const list = DB.getStudentPosts().filter(
+    item => currentStudentFilter === 'all' || item.category === currentStudentFilter
+  );
+
+  const catLabels = {
+    materiais: '🎨 Materiais',
+    pesquisa:  '📚 Pesquisa / Monitoria',
+    mostra:    '🖼️ Mostra / Ateliê',
+  };
+
+  grid.innerHTML = list.map(item => `
+    <article class="bg-white rounded-2xl border border-carcara-200 p-5 flex flex-col justify-between gap-4 shadow-sm hover:shadow-md transition">
+      <div>
+        <div class="flex items-center justify-between gap-2 mb-2.5">
+          <span class="text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full bg-carcara-100 text-carcara-800">
+            ${catLabels[item.category] || item.category}
+          </span>
+          <span class="text-[11px] text-sertao-700/50">${timeAgo(item.createdAt)}</span>
+        </div>
+        <h4 class="font-display font-bold text-lg text-sertao-900 leading-snug mb-1.5">${item.title}</h4>
+        <p class="text-xs text-sertao-700/80 leading-relaxed">${item.description}</p>
+      </div>
+
+      <div class="pt-3 border-t border-carcara-100 flex items-center justify-between gap-2">
+        <div>
+          <p class="text-xs font-semibold text-sertao-900">${item.authorName}</p>
+          <p class="text-[11px] text-carcara-700"><i class="bi bi-mortarboard-fill mr-1"></i>${item.institution || 'UFPI'}</p>
+        </div>
+        <button data-student-dm="${item.authorId}" data-student-topic="${item.title}"
+                class="px-3 py-1.5 rounded-full text-xs font-semibold bg-sertao-900 text-carcara-100 hover:bg-sertao-800 transition shrink-0">
+          <i class="bi bi-chat-dots-fill mr-1"></i> Contatar
+        </button>
+      </div>
+    </article>`).join('') || `<p class="col-span-3 text-center text-sertao-700/60 py-10 text-sm">Nenhum aviso estudantil publicado nessa categoria ainda.</p>`;
+
+  $$('[data-student-dm]', grid).forEach(btn => {
+    btn.onclick = () => {
+      const me = Auth.getUser();
+      if (me && me.id === btn.dataset.studentDm) {
+        toast('Este aviso foi publicado por você! 🎓');
+        return;
+      }
+      openMessagesDialog({
+        targetUserId: btn.dataset.studentDm,
+        contextPost: `Área Estudantil: ${btn.dataset.studentTopic}`,
+      });
+    };
+  });
+}
+
+export function initStudentBoardControls() {
+  const box = $('#studentFilters');
+  if (box) {
+    box.innerHTML = CONFIG.STUDENT_FILTERS.map((f, i) =>
+      `<button data-st-filter="${f.id}" class="filter-btn ${i === 0 ? 'active' : ''}">${f.label}</button>`
+    ).join('');
+
+    $$('.filter-btn', box).forEach(btn => {
+      btn.onclick = () => {
+        $$('.filter-btn', box).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentStudentFilter = btn.dataset.stFilter;
+        renderStudentBoard();
+      };
+    });
+  }
+
+  $('#newStudentPostBtn')?.addEventListener('click', () => {
+    const user = Auth.getUser();
+    if (!user) { openAuthDialog(); return; }
+
+    openDialog({
+      title: 'Publicar na Área dos Estudantes',
+      size: 'max-w-md',
+      html: `
+        <form id="studentPostForm" class="space-y-3">
+          <div>
+            <label class="form-label">Categoria</label>
+            <select name="category" class="form-input">
+              <option value="materiais">🎨 Troca / Doação / Venda de Materiais</option>
+              <option value="pesquisa">📚 Grupo de Pesquisa & Monitoria</option>
+              <option value="mostra">🖼️ Mostra Acadêmica & Ateliê</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Título do aviso</label>
+            <input name="title" required class="form-input" placeholder="Ex: Vendo cavalete de madeira ou Busco dupla p/ exposição" />
+          </div>
+          <div>
+            <label class="form-label">Curso / Instituição</label>
+            <input name="institution" required value="${user.institution || 'Artes Visuais • UFPI'}" class="form-input" />
+          </div>
+          <div>
+            <label class="form-label">Detalhes</label>
+            <textarea name="description" rows="3" required class="form-input" placeholder="Descreva o material, horário do grupo ou local no campus..."></textarea>
+          </div>
+          <button type="submit" class="btn-primary w-full justify-center">Publicar no mural 🎓</button>
+        </form>`,
+      onMount(root) {
+        root.querySelector('#studentPostForm').onsubmit = (e) => {
+          e.preventDefault();
+          const data = Object.fromEntries(new FormData(e.target));
+          DB.addStudentPost({
+            ...data,
+            authorId: user.id,
+            authorName: user.name,
+          });
+          closeDialog();
+          renderStudentBoard();
+          toast('Aviso publicado na Área dos Estudantes! 🎓');
+        };
+      },
+    });
+  });
+}
+
+// ======================================================
+// ARTISTAS & PERFIL COMPLETO
+// ======================================================
 export async function renderArtistas(onSelectPost, onProfileUpdated = null) {
   const grid = $('#artistasGrid');
   if (!grid) return;
@@ -117,7 +247,7 @@ export async function renderArtistas(onSelectPost, onProfileUpdated = null) {
       <div class="artist-card" data-artist-id="${u.id}">
         ${avatarHtml}
         <span class="artist-card__name line-clamp-1">${u.name} <i class="bi bi-patch-check-fill text-carcara-600 text-[11px]"></i></span>
-        <span class="text-[10px] text-sertao-700/60 line-clamp-1">${u.city || 'Piauí'}</span>
+        <span class="text-[10px] text-sertao-700/60 line-clamp-1">${u.isStudent ? `🎓 ${u.institution || 'UFPI'}` : (u.city || 'Piauí')}</span>
         ${u.openToWork ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">🟢 Encomendas</span>` : `<span class="text-[10px] font-semibold text-carcara-700">${DB.getFollowersCount(u.id)} seguidores</span>`}
       </div>`;
   }));
@@ -170,6 +300,7 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
                 ${artist.licensed
                   ? `<span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold"><i class="bi bi-patch-check-fill"></i> Licenciado</span>`
                   : `<span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-carcara-100 text-carcara-800 font-semibold">Visitante</span>`}
+                ${artist.isStudent ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-carcara-200 text-sertao-900 font-semibold">🎓 ${artist.institution || 'Estudante'}</span>` : ''}
                 ${artist.openToWork ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-semibold">🟢 Aberto a encomendas</span>` : ''}
               </div>
               <p class="text-xs text-sertao-700/80 mt-1">${artist.bio || 'Comunidade Carcará • Piauí'}</p>
@@ -218,14 +349,26 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
               <label class="form-label">Bio / Pesquisa artística</label>
               <input name="bio" value="${artist.bio || ''}" placeholder="Conte um pouco sobre seu trabalho..." class="form-input bg-white" />
             </div>
-            <div>
-              <label class="form-label">Link externo (Instagram, itch.io, Behance, Site)</label>
-              <input name="socialUrl" type="url" value="${artist.socialUrl || ''}" placeholder="https://" class="form-input bg-white" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="form-label">Link externo (Instagram, itch.io, Behance)</label>
+                <input name="socialUrl" type="url" value="${artist.socialUrl || ''}" placeholder="https://" class="form-input bg-white" />
+              </div>
+              <div>
+                <label class="form-label">Instituição / Curso (se estudante)</label>
+                <input name="institution" value="${artist.institution || ''}" placeholder="Ex: Artes Visuais • UFPI" class="form-input bg-white" />
+              </div>
             </div>
-            <label class="flex items-center gap-2 text-xs font-medium text-sertao-800 cursor-pointer pt-1">
-              <input type="checkbox" name="openToWork" ${artist.openToWork ? 'checked' : ''} class="accent-carcara-600" />
-              🟢 Disponível para encomendas, comissões e projetos
-            </label>
+            <div class="flex flex-col gap-1.5 pt-1">
+              <label class="flex items-center gap-2 text-xs font-medium text-sertao-800 cursor-pointer">
+                <input type="checkbox" name="isStudent" ${artist.isStudent ? 'checked' : ''} class="accent-carcara-600" />
+                🎓 Sou estudante de artes / instituição de ensino
+              </label>
+              <label class="flex items-center gap-2 text-xs font-medium text-sertao-800 cursor-pointer">
+                <input type="checkbox" name="openToWork" ${artist.openToWork ? 'checked' : ''} class="accent-carcara-600" />
+                🟢 Disponível para encomendas, comissões e projetos
+              </label>
+            </div>
             <div class="flex justify-end gap-2">
               <button type="button" id="cancelEditProfileBtn" class="px-3 py-1.5 rounded-full text-xs font-semibold text-sertao-700 hover:bg-carcara-200">Cancelar</button>
               <button type="submit" class="btn-primary text-xs">Salvar alterações</button>
@@ -275,6 +418,8 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
           city: fd.get('city').trim(),
           bio: fd.get('bio').trim(),
           socialUrl: fd.get('socialUrl').trim(),
+          institution: fd.get('institution').trim(),
+          isStudent: !!fd.get('isStudent'),
           openToWork: !!fd.get('openToWork'),
         };
         if (file && file.size > 0) {

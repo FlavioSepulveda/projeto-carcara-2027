@@ -6,11 +6,9 @@
   <meta name="description" content="Carcará - Comunidade de artistas visuais piauienses" />
   <title>Carcará 🦅 | Artistas Piauienses</title>
 
-  <!-- Icons + AOS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -65,6 +63,7 @@
           <li><a href="#portfolio" class="nav-link">Portfólio</a></li>
           <li><a href="#oportunidades" class="nav-link">Oportunidades</a></li>
           <li><a href="#artistas" class="nav-link">Artistas</a></li>
+          <li><a href="#estudantes" class="nav-link">Estudantes</a></li>
           <li><a href="#licenca" class="nav-link text-carcara-700 font-semibold">Licença</a></li>
           <li id="sessionArea" class="flex items-center gap-2"></li>
         </ul>
@@ -84,6 +83,7 @@
           <li><a href="#portfolio" class="mobile-link">Portfólio</a></li>
           <li><a href="#oportunidades" class="mobile-link">Oportunidades</a></li>
           <li><a href="#artistas" class="mobile-link">Artistas</a></li>
+          <li><a href="#estudantes" class="mobile-link">Área dos Estudantes</a></li>
           <li><a href="#licenca" class="mobile-link font-semibold text-carcara-700">Solicitar Licença</a></li>
           <li id="sessionAreaMobile" class="pt-2"></li>
         </ul>
@@ -91,17 +91,17 @@
     </nav>
   </header>
 
-  <!-- HERO (100% Tailwind, sem Bootstrap) -->
+  <!-- HERO -->
   <section class="hero-section relative overflow-hidden bg-sertao-900 text-carcara-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-10" data-aos="fade-up">
       <span class="inline-block text-[11px] uppercase tracking-[0.2em] text-carcara-300 mb-4">
-        Comunidade • Piauí • Artes Visuais
+        Comunidade • Piauí • Artes Visuais & Game Art
       </span>
       <h2 class="font-display text-4xl sm:text-6xl font-bold leading-tight max-w-3xl mb-5">
         Onde a arte do <span class="text-carcara-400">Piauí</span> encontra seu voo.
       </h2>
       <p class="text-base sm:text-lg text-carcara-100/80 max-w-xl mb-8">
-        Um ninho curado para artistas visuais piauienses licenciados compartilharem processos, referências e oportunidades.
+        Um ninho curado para artistas visuais piauienses licenciados compartilharem processos, álbuns, jogos autorais e oportunidades.
       </p>
       <div class="flex flex-wrap gap-3">
         <a href="#feed" class="btn-primary px-6 py-3 text-sm">Explorar o Feed</a>
@@ -188,6 +188,23 @@
     <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"></div>
   </section>
 
+  <!-- ÁREA DOS ESTUDANTES -->
+  <section id="estudantes" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-carcara-200">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-6">
+      <div>
+        <span class="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest bg-carcara-100 text-carcara-800 px-3 py-1 rounded-full font-semibold mb-2">
+          <i class="bi bi-mortarboard-fill"></i> UFPI • IFPI • Escolas de Arte
+        </span>
+        <h3 class="font-display text-2xl sm:text-3xl font-bold">Área dos Estudantes</h3>
+        <p class="text-sertao-700/70 text-sm mt-1">Troca de materiais de ateliê, grupos de pesquisa, monitorias e mostras acadêmicas.</p>
+      </div>
+      <button id="newStudentPostBtn" class="btn-primary">+ Publicar no mural estudantil</button>
+    </div>
+
+    <div id="studentFilters" class="flex gap-2 overflow-x-auto pb-3 mb-6"></div>
+    <div id="studentBoardGrid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+  </section>
+
   <!-- LICENÇA / FILA DE ESPERA -->
   <section id="licenca" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-carcara-200">
     <div class="bg-white rounded-3xl border border-carcara-200 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
@@ -198,7 +215,7 @@
           </span>
           <h3 class="font-display text-2xl sm:text-3xl font-bold text-carcara-100 mb-3">Licença de Artista</h3>
           <p class="text-sm text-carcara-100/75 leading-relaxed mb-4">
-            Apenas perfis com <strong>Licença Ativa</strong> publicam obras no feed. Visitantes podem curtir, comentar e montar murais livremente.
+            Apenas perfis com <strong>Licença Ativa</strong> publicam obras no feed. Visitantes podem curtir, comentar, trocar mensagens e montar murais livremente.
           </p>
         </div>
         <div id="licenseStatusBox" class="rounded-2xl bg-sertao-800 border border-sertao-700 p-4"></div>
@@ -232,11 +249,12 @@
                 <option value="ceramica">Cerâmica / Escultura</option>
                 <option value="fotografia">Fotografia / Audiovisual</option>
                 <option value="3d">Arte Digital / 3D</option>
+                <option value="jogos">Jogos / Game Art</option>
               </select>
             </div>
           </div>
           <div>
-            <label class="form-label">Link de portfólio ou Instagram</label>
+            <label class="form-label">Link de portfólio, itch.io ou Instagram</label>
             <input name="portfolioUrl" type="url" required class="form-input" placeholder="https://instagram.com/seuatelie" />
           </div>
           <div>
@@ -260,7 +278,7 @@
     </div>
   </footer>
 
-  <!-- MODAL ÚNICO REUTILIZÁVEL (substitui os 8 modais antigos) -->
+  <!-- MODAL ÚNICO REUTILIZÁVEL -->
   <div id="appModal" class="modal hidden" role="dialog" aria-modal="true">
     <div id="appModalDialog" class="modal-content max-w-lg">
       <div class="modal-header">

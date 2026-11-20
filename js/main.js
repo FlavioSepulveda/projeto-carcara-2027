@@ -3,7 +3,15 @@ import { Auth, openAuthDialog } from './auth.js';
 import { $, $$, initDialogEvents, toast } from './ui.js';
 import { renderStories, renderFeed, showPostDetails, initFeedControls } from './feed.js';
 import { renderMurais, openNewMuralDialog, openSavePinDialog } from './murais.js';
-import { renderPortfolio, renderOportunidades, initOportunidadesControls, renderArtistas, openArtistProfile } from './community.js';
+import {
+  renderPortfolio,
+  renderOportunidades,
+  initOportunidadesControls,
+  renderStudentBoard,
+  initStudentBoardControls,
+  renderArtistas,
+  openArtistProfile,
+} from './community.js';
 import { renderLicenseSection, initLicenseForm, openPublishFlow } from './license.js';
 import { openMessagesDialog } from './messages.js';
 
@@ -24,7 +32,9 @@ async function renderNavbar() {
   const licensed  = Auth.hasLicense();
   const initial   = user.name.charAt(0).toUpperCase();
   const fullUser  = DB.getUserById(user.id) || user;
-  const avatarUrl = fullUser.avatarKey ? await DB.getImageURL(fullUser.avatarKey) : null;
+  const avatarUrl = fullUser.avatarKey
+    ? await DB.getImageURL(fullUser.avatarKey)
+    : (fullUser.avatarUrl || null);
 
   const avatarContent = avatarUrl
     ? `<img src="${avatarUrl}" alt="${user.name}" class="w-full h-full rounded-full object-cover" />`
@@ -95,6 +105,7 @@ function renderAll() {
   renderPortfolio(openPost);
   renderMurais(openPost);
   renderOportunidades();
+  renderStudentBoard();
   renderArtistas(openPost, renderAll);
 }
 
@@ -102,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDialogEvents();
   initFeedControls(feedCallbacks);
   initOportunidadesControls();
+  initStudentBoardControls();
   initLicenseForm(renderAll);
 
   $('#newMuralBtn')?.addEventListener('click', () => openNewMuralDialog(() => renderMurais(openPost)));

@@ -73,7 +73,9 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
 
   for (let i = 0; i < posts.length; i++) {
     const p = posts[i];
-    const imgUrl   = await DB.resolvePostImage(p);
+    const allImgs  = await DB.resolvePostImages(p);
+    const imgUrl   = allImgs[0];
+    const isAlbum  = allImgs.length > 1;
     const liked    = user ? DB.hasLiked(p.id, user.id) : false;
     const saved    = DB.isPostSavedAnywhere(p.id);
     const comments = DB.getCommentsByPost(p.id);
@@ -99,6 +101,10 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
 
       <div class="post-card__media">
         ${feedLayout === 'masonry' ? `<span class="post-card__tag">${tagLabel}</span>` : ''}
+        ${isAlbum ? `
+          <span class="absolute bottom-2.5 right-2.5 z-10 inline-flex items-center gap-1 bg-sertao-900/85 text-carcara-50 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur">
+            <i class="bi bi-images"></i> ${allImgs.length}
+          </span>` : ''}
         <div class="post-card__actions">
           ${feedLayout === 'masonry' ? `<button class="pin-save-btn ${saved ? 'saved' : ''}" data-pin>${saved ? 'Salvo' : 'Salvar'}</button>` : ''}
           <button class="icon-btn like-btn ${liked ? 'liked' : ''}" title="Curtir">❤</button>
@@ -203,7 +209,10 @@ function syncLikeUI(card, liked, count) {
 }
 
 export async function showPostDetails(p, callbacks = {}) {
-  const imgUrl   = await DB.resolvePostImage(p);
+  const images   = await DB.resolvePostImages(p);
+  const isAlbum  = images.length > 1;
+  let currentIdx = 0;
+
   const user     = Auth.getUser();
   const liked    = user ? DB.hasLiked(p.id, user.id) : false;
   const comments = DB.getCommentsByPost(p.id);
@@ -216,9 +225,32 @@ export async function showPostDetails(p, callbacks = {}) {
     size: 'max-w-2xl',
     html: `
       <div class="space-y-4">
-        <div class="rounded-xl overflow-hidden bg-carcara-100 relative">
-          <img src="${imgUrl}" alt="${p.title}" class="w-full max-h-[55vh] object-contain mx-auto" />
+        <!-- Carrossel do Álbum / Obra -->
+        <div class="rounded-xl overflow-hidden bg-carcara-100 relative select-none">
+          <img id="carouselMainImg" src="${images[0]}" alt="${p.title}" class="w-full max-h-[55vh] object-contain mx-auto transition-opacity duration-200" />
+
+          ${isAlbum ? `
+            <button type="button" id="carouselPrev" aria-label="Anterior"
+                    class="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-sertao-900/80 hover:bg-sertao-900 text-white flex items-center justify-center shadow">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button type="button" id="carouselNext" aria-label="Próxima"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-sertao-900/80 hover:bg-sertao-900 text-white flex items-center justify-center shadow">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <span id="carouselCounter" class="absolute top-2.5 right-2.5 bg-sertao-900/80 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+              1 / ${images.length}
+            </span>` : ''}
         </div>
+
+        ${isAlbum ? `
+          <div id="carouselThumbs" class="flex gap-2 overflow-x-auto pb-1">
+            ${images.map((src, idx) => `
+              <button type="button" data-thumb-idx="${idx}"
+                      class="w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 transition ${idx === 0 ? 'border-carcara-600 scale-105' : 'border-transparent opacity-65 hover:opacity-100'}">
+                <img src="${src}" class="w-full h-full object-cover" />
+              </button>`).join('')}
+          </div>` : ''}
 
         ${p.playableUrl ? `
           <a href="${p.playableUrl}" target="_blank" rel="noopener"
@@ -275,6 +307,27 @@ export async function showPostDetails(p, callbacks = {}) {
         </div>
       </div>`,
     onMount(root) {
+      if (isAlbum) {
+        const mainImg = root.querySelector('#carouselMainImg');
+        const counter = root.querySelector('#carouselCounter');
+        const thumbs  = root.querySelectorAll('[data-thumb-idx]');
+
+        const goToSlide = (idx) => {
+          currentIdx = (idx + images.length) % images.length;
+          mainImg.src = images[currentIdx];
+          counter.textContent = `${currentIdx + 1} / ${images.length}`;
+          thumbs.forEach((t, i) => {
+            t.className = `w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 transition ${i === currentIdx ? 'border-carcara-600 scale-105' : 'border-transparent opacity-65 hover:opacity-100'}`;
+          });
+        };
+
+        root.querySelector('#carouselPrev').onclick = () => goToSlide(currentIdx - 1);
+        root.querySelector('#carouselNext').onclick = () => goToSlide(currentIdx + 1);
+        thumbs.forEach(t => {
+          t.onclick = () => goToSlide(Number(t.dataset.thumbIdx));
+        });
+      }
+
       root.querySelector('#postAuthorLink').onclick = () => {
         closeDialog();
         if (callbacks.onOpenArtist) callbacks.onOpenArtist(p.artistId);

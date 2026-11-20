@@ -9,6 +9,7 @@ const KEYS = {
   follows:         'carcara:follows',
   licenseRequests: 'carcara:license_requests',
   messages:        'carcara:messages',
+  studentBoard:    'carcara:student_board',
 };
 
 const read  = (k) => JSON.parse(localStorage.getItem(k) || '[]');
@@ -18,19 +19,37 @@ const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 function seed() {
   if (read(KEYS.users).length === 0) {
     write(KEYS.users, [
-      { id: 'demo', name: 'Artista Demo', email: 'demo@carcara.piaui', password: '1234', city: 'Teresina', bio: 'Estudante de Artes Visuais • Teresina 🎨', socialUrl: '', avatar: null, licensed: true },
-      { id: 'clara', name: 'Clara Mendes', email: 'clara@carcara.piaui', password: '1234', city: 'Oeiras', bio: 'Ceramista e pesquisadora de barro do Poti 🏺', socialUrl: '', avatar: null, licensed: true },
-      { id: 'joao', name: 'João Carnaúba', email: 'joao@carcara.piaui', password: '1234', city: 'Parnaíba', bio: 'Xilogravura e memória sertaneja 🪵', socialUrl: '', avatar: null, licensed: true },
+      { id: 'demo', name: 'Artista Demo', email: 'demo@carcara.piaui', password: '1234', city: 'Teresina', bio: 'Estudante de Artes Visuais • Teresina 🎨', socialUrl: '', isStudent: true, institution: 'Artes Visuais • UFPI', openToWork: true, avatar: null, licensed: true },
+      { id: 'clara', name: 'Clara Mendes', email: 'clara@carcara.piaui', password: '1234', city: 'Oeiras', bio: 'Ceramista e pesquisadora de barro do Poti 🏺', socialUrl: '', isStudent: false, institution: '', openToWork: true, avatar: null, licensed: true },
+      { id: 'joao', name: 'João Carnaúba', email: 'joao@carcara.piaui', password: '1234', city: 'Parnaíba', bio: 'Xilogravura e memória sertaneja 🪵', socialUrl: '', isStudent: false, institution: '', openToWork: false, avatar: null, licensed: true },
     ]);
   }
 
   if (read(KEYS.posts).length === 0) {
     const now = Date.now();
     write(KEYS.posts, [
-      { id: 'p1', title: 'Série "Sertão Vivo" — estudo em óleo', tag: 'pintura', artist: 'Artista Demo', artistId: 'demo', location: 'Teresina', likes: 12, img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=700&q=80', description: 'Estudo de luz e temperatura cromática sobre tela de algodão cru.', createdAt: now - 100000, portfolio: true },
-      { id: 'p2', title: 'Gravura em linóleo: o carcará', tag: 'gravura', artist: 'João Carnaúba', artistId: 'joao', location: 'Parnaíba', likes: 19, img: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&q=80', description: 'Primeira tiragem em linóleo sobre papel artesanal 180g.', createdAt: now - 200000, portfolio: false },
-      { id: 'p3', title: 'Vaso cerâmico — argila local do Poti', tag: 'ceramica', artist: 'Clara Mendes', artistId: 'clara', location: 'Oeiras', likes: 27, img: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=700&q=80', description: 'Argila coletada nas margens do rio e queimada em forno a lenha.', createdAt: now - 300000, portfolio: true },
-      { id: 'p4', title: 'Retratos do bairro Vermelha', tag: 'fotografia', artist: 'Artista Demo', artistId: 'demo', location: 'Teresina', likes: 15, img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=700&q=80', description: 'Série fotográfica documental em luz natural de fim de tarde.', createdAt: now - 400000, portfolio: false },
+      {
+        id: 'p1',
+        title: 'Série "Sertão Vivo" — estudo em óleo',
+        tag: 'pintura',
+        availability: 'encomendas',
+        medium: 'Óleo sobre tela',
+        dimensions: '60x80cm',
+        artist: 'Artista Demo',
+        artistId: 'demo',
+        location: 'Teresina',
+        likes: 12,
+        images: [
+          'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=700&q=80',
+          'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&q=80',
+        ],
+        description: 'Estudo de luz e temperatura cromática sobre tela de algodão cru (etapas do processo).',
+        createdAt: now - 100000,
+        portfolio: true,
+      },
+      { id: 'p2', title: 'Gravura em linóleo: o carcará', tag: 'gravura', availability: 'venda', medium: 'Linoleogravura', dimensions: '30x42cm', artist: 'João Carnaúba', artistId: 'joao', location: 'Parnaíba', likes: 19, img: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&q=80', description: 'Primeira tiragem em linóleo sobre papel artesanal 180g.', createdAt: now - 200000, portfolio: false },
+      { id: 'p3', title: 'Vaso cerâmico — argila local do Poti', tag: 'ceramica', availability: 'encomendas', medium: 'Argila queimada', dimensions: '25x18cm', artist: 'Clara Mendes', artistId: 'clara', location: 'Oeiras', likes: 27, img: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=700&q=80', description: 'Argila coletada nas margens do rio e queimada em forno a lenha.', createdAt: now - 300000, portfolio: true },
+      { id: 'p4', title: 'Retratos do bairro Vermelha', tag: 'fotografia', availability: 'acervo', medium: 'Fotografia Digital', artist: 'Artista Demo', artistId: 'demo', location: 'Teresina', likes: 15, img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=700&q=80', description: 'Série fotográfica documental em luz natural de fim de tarde.', createdAt: now - 400000, portfolio: false },
     ]);
   }
 
@@ -46,6 +65,31 @@ function seed() {
     write(KEYS.editais, [
       { id: genId(), title: 'PNAB Piauí — Artes Visuais', type: 'edital', description: 'Inscrições abertas para projetos de circulação e formação artística no Piauí.', deadline: '2026-12-15', link: '', createdAt: Date.now() },
       { id: genId(), title: 'Salão de Artes de Teresina', type: 'exposicao', description: 'Chamada para artistas visuais apresentarem obras na mostra coletiva anual.', deadline: '2026-11-30', link: '', createdAt: Date.now() },
+    ]);
+  }
+
+  if (read(KEYS.studentBoard).length === 0) {
+    write(KEYS.studentBoard, [
+      {
+        id: genId(),
+        category: 'materiais',
+        title: 'Doação de sobras de argila e ferramentas de modelagem',
+        institution: 'Artes Visuais • UFPI',
+        description: 'Tenho cerca de 4kg de argila branca embalada e espátulas de madeira sobrando do semestre passado. Entrego no CCE.',
+        authorId: 'demo',
+        authorName: 'Artista Demo',
+        createdAt: Date.now() - 3600000,
+      },
+      {
+        id: genId(),
+        category: 'pesquisa',
+        title: 'Grupo de Estudos em Arte Digital, Shaders e Jogos Autorais',
+        institution: 'UFPI • Teresina',
+        description: 'Encontros semanais às quintas-feiras para prototipar jogos experimentais e discutir estética piauiense nos games.',
+        authorId: 'clara',
+        authorName: 'Clara Mendes',
+        createdAt: Date.now() - 7200000,
+      },
     ]);
   }
 
@@ -87,7 +131,7 @@ export const DB = {
   getUserById: (id) => read(KEYS.users).find(u => u.id === id),
   addUser(user) {
     const users = read(KEYS.users);
-    const created = { ...user, id: genId(), city: 'Piauí', bio: 'Membro da comunidade Carcará 🦅', socialUrl: '', avatar: null, licensed: false };
+    const created = { ...user, id: genId(), city: 'Piauí', bio: 'Membro da comunidade Carcará 🦅', socialUrl: '', isStudent: false, institution: '', openToWork: false, avatar: null, licensed: false };
     users.push(created);
     write(KEYS.users, users);
     return created;
@@ -153,6 +197,16 @@ export const DB = {
       const bio = req ? `Artista visual • ${req.city} (${req.specialty}) 🎨` : user.bio;
       this.setUserLicensed(user.id, true, bio, req?.city || user.city);
     }
+  },
+
+  // Área dos Estudantes
+  getStudentPosts: () => read(KEYS.studentBoard).sort((a, b) => b.createdAt - a.createdAt),
+  addStudentPost(item) {
+    const list = read(KEYS.studentBoard);
+    const created = { ...item, id: genId(), createdAt: Date.now() };
+    list.push(created);
+    write(KEYS.studentBoard, list);
+    return created;
   },
 
   // Mensagens Diretas (DM)
@@ -279,7 +333,7 @@ export const DB = {
     list.push(created); write(KEYS.editais, list); return created;
   },
 
-  // Imagens
+  // Imagens & Álbuns
   async saveImage(file) {
     const db = await openIDB();
     const key = genId();
@@ -299,9 +353,28 @@ export const DB = {
       req.onerror = () => reject(req.error);
     });
   },
+  async resolvePostImages(post) {
+    const urls = [];
+    if (Array.isArray(post.images) && post.images.length > 0) {
+      urls.push(...post.images);
+    }
+    if (Array.isArray(post.imgKeys) && post.imgKeys.length > 0) {
+      for (const k of post.imgKeys) {
+        const u = await this.getImageURL(k);
+        if (u) urls.push(u);
+      }
+    }
+    if (urls.length === 0) {
+      if (post.img) urls.push(post.img);
+      else if (post.imgKey) {
+        const u = await this.getImageURL(post.imgKey);
+        if (u) urls.push(u);
+      }
+    }
+    return urls.length > 0 ? urls : ['https://via.placeholder.com/500?text=🦅'];
+  },
   async resolvePostImage(post) {
-    if (post.img) return post.img;
-    if (post.imgKey) return (await this.getImageURL(post.imgKey)) || 'https://via.placeholder.com/500?text=🦅';
-    return 'https://via.placeholder.com/500?text=🦅';
+    const urls = await this.resolvePostImages(post);
+    return urls[0];
   },
 };

@@ -16,6 +16,12 @@ export const CONFIG = {
     { id: 'residencia', label: 'Residências' },
     { id: 'formacao', label: 'Formação' },
   ],
+  STUDENT_FILTERS: [
+    { id: 'all', label: 'Todos' },
+    { id: 'materiais', label: '🎨 Troca / Venda de Materiais' },
+    { id: 'pesquisa', label: '📚 Grupos de Pesquisa & Monitoria' },
+    { id: 'mostra', label: '🖼️ Mostras & Ateliês' },
+  ],
   AVAILABILITY_LABELS: {
     encomendas: { label: '🟢 Aberto a encomendas', badge: 'bg-emerald-100 text-emerald-800' },
     venda:      { label: '🏷️ Obra à venda', badge: 'bg-amber-100 text-amber-800' },
