@@ -118,7 +118,7 @@ export async function renderArtistas(onSelectPost, onProfileUpdated = null) {
         ${avatarHtml}
         <span class="artist-card__name line-clamp-1">${u.name} <i class="bi bi-patch-check-fill text-carcara-600 text-[11px]"></i></span>
         <span class="text-[10px] text-sertao-700/60 line-clamp-1">${u.city || 'Piauí'}</span>
-        <span class="text-[10px] font-semibold text-carcara-700">${DB.getFollowersCount(u.id)} seguidores</span>
+        ${u.openToWork ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">🟢 Encomendas</span>` : `<span class="text-[10px] font-semibold text-carcara-700">${DB.getFollowersCount(u.id)} seguidores</span>`}
       </div>`;
   }));
 
@@ -147,7 +147,7 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
         <img src="${await DB.resolvePostImage(p)}" class="w-full h-36 object-cover group-hover:scale-105 transition duration-300" />
         <div class="p-2">
           <p class="text-xs font-semibold line-clamp-1">${p.title}</p>
-          <p class="text-[10px] text-sertao-700/60 capitalize">${p.tag} • ❤ ${p.likes || 0}</p>
+          <p class="text-[10px] text-sertao-700/60 capitalize">${p.tag === 'jogos' ? '🎮 Jogos' : p.tag} • ❤ ${p.likes || 0}</p>
         </div>
       </div>`));
     return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${items.join('')}</div>`;
@@ -170,11 +170,12 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
                 ${artist.licensed
                   ? `<span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold"><i class="bi bi-patch-check-fill"></i> Licenciado</span>`
                   : `<span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-carcara-100 text-carcara-800 font-semibold">Visitante</span>`}
+                ${artist.openToWork ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-semibold">🟢 Aberto a encomendas</span>` : ''}
               </div>
               <p class="text-xs text-sertao-700/80 mt-1">${artist.bio || 'Comunidade Carcará • Piauí'}</p>
               <div class="flex items-center gap-3 text-[11px] text-sertao-700/60 mt-1.5 flex-wrap">
                 <span><i class="bi bi-geo-alt-fill text-carcara-600"></i> ${artist.city || 'Piauí'}</span>
-                ${artist.socialUrl ? `<a href="${artist.socialUrl}" target="_blank" rel="noopener" class="text-carcara-700 font-medium hover:underline"><i class="bi bi-link-45deg"></i> Portfólio externo</a>` : ''}
+                ${artist.socialUrl ? `<a href="${artist.socialUrl}" target="_blank" rel="noopener" class="text-carcara-700 font-medium hover:underline"><i class="bi bi-link-45deg"></i> Portfólio / itch.io</a>` : ''}
               </div>
               <p class="text-xs text-carcara-700 font-semibold mt-2">
                 ${allPosts.length} obras • <span id="profFollowers">${DB.getFollowersCount(artistId)}</span> seguidores
@@ -218,9 +219,13 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
               <input name="bio" value="${artist.bio || ''}" placeholder="Conte um pouco sobre seu trabalho..." class="form-input bg-white" />
             </div>
             <div>
-              <label class="form-label">Link externo (Instagram, Behance, Site)</label>
+              <label class="form-label">Link externo (Instagram, itch.io, Behance, Site)</label>
               <input name="socialUrl" type="url" value="${artist.socialUrl || ''}" placeholder="https://" class="form-input bg-white" />
             </div>
+            <label class="flex items-center gap-2 text-xs font-medium text-sertao-800 cursor-pointer pt-1">
+              <input type="checkbox" name="openToWork" ${artist.openToWork ? 'checked' : ''} class="accent-carcara-600" />
+              🟢 Disponível para encomendas, comissões e projetos
+            </label>
             <div class="flex justify-end gap-2">
               <button type="button" id="cancelEditProfileBtn" class="px-3 py-1.5 rounded-full text-xs font-semibold text-sertao-700 hover:bg-carcara-200">Cancelar</button>
               <button type="submit" class="btn-primary text-xs">Salvar alterações</button>
@@ -270,6 +275,7 @@ export async function openArtistProfile(artistId, onSelectPost, onProfileUpdated
           city: fd.get('city').trim(),
           bio: fd.get('bio').trim(),
           socialUrl: fd.get('socialUrl').trim(),
+          openToWork: !!fd.get('openToWork'),
         };
         if (file && file.size > 0) {
           patch.avatarKey = await DB.saveImage(file);

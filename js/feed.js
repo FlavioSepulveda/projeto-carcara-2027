@@ -58,7 +58,7 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
   if (currentSearch.trim()) {
     const q = currentSearch.trim().toLowerCase();
     posts = posts.filter(p =>
-      [p.title, p.artist, p.location, p.description].some(v => (v || '').toLowerCase().includes(q))
+      [p.title, p.artist, p.location, p.description, p.medium].some(v => (v || '').toLowerCase().includes(q))
     );
   }
   if (currentSort === 'popular') {
@@ -77,6 +77,8 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
     const liked    = user ? DB.hasLiked(p.id, user.id) : false;
     const saved    = DB.isPostSavedAnywhere(p.id);
     const comments = DB.getCommentsByPost(p.id);
+    const avail    = CONFIG.AVAILABILITY_LABELS[p.availability];
+    const tagLabel = p.tag === 'jogos' ? '🎮 Jogos' : p.tag;
 
     const card = document.createElement('article');
     card.className = 'post-card';
@@ -92,11 +94,11 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
               <p class="text-[11px] text-sertao-700/60">${p.location || 'Piauí'} • ${timeAgo(p.createdAt)}</p>
             </div>
           </div>
-          <span class="text-[10px] uppercase px-2.5 py-1 rounded-full bg-carcara-100 text-carcara-800 font-semibold">${p.tag}</span>
+          <span class="text-[10px] uppercase px-2.5 py-1 rounded-full bg-carcara-100 text-carcara-800 font-semibold">${tagLabel}</span>
         </div>` : ''}
 
       <div class="post-card__media">
-        ${feedLayout === 'masonry' ? `<span class="post-card__tag">${p.tag}</span>` : ''}
+        ${feedLayout === 'masonry' ? `<span class="post-card__tag">${tagLabel}</span>` : ''}
         <div class="post-card__actions">
           ${feedLayout === 'masonry' ? `<button class="pin-save-btn ${saved ? 'saved' : ''}" data-pin>${saved ? 'Salvo' : 'Salvar'}</button>` : ''}
           <button class="icon-btn like-btn ${liked ? 'liked' : ''}" title="Curtir">❤</button>
@@ -107,7 +109,15 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
       </div>
 
       <div class="post-card__body">
-        <h4 class="post-card__title line-clamp-2">${p.title}</h4>
+        <div class="flex items-start justify-between gap-2">
+          <h4 class="post-card__title line-clamp-2">${p.title}</h4>
+          ${p.playableUrl ? `<span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sertao-900 text-carcara-300">🎮 Demo</span>` : ''}
+        </div>
+
+        ${avail && p.availability !== 'acervo' ? `
+          <span class="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${avail.badge}">${avail.label}</span>
+        ` : ''}
+
         ${feedLayout === 'stream' ? `
           ${p.description ? `<p class="text-xs text-sertao-700/80 mt-1 line-clamp-2">${p.description}</p>` : ''}
           <div class="ig-footer-bar">
@@ -126,7 +136,6 @@ export async function renderFeed({ onOpenArtist, onOpenSavePin, onPortfolioChang
           </div>`}
       </div>`;
 
-    // Duplo clique curte / clique simples abre detalhes
     let timer = null;
     card.querySelector('.post-card__media').onclick = (e) => {
       if (e.target.closest('button')) return;
@@ -199,15 +208,30 @@ export async function showPostDetails(p, callbacks = {}) {
   const liked    = user ? DB.hasLiked(p.id, user.id) : false;
   const comments = DB.getCommentsByPost(p.id);
   const isOwn    = user && user.id === p.artistId;
+  const avail    = CONFIG.AVAILABILITY_LABELS[p.availability];
+  const specs    = [p.medium, p.dimensions, p.location].filter(Boolean);
 
   openDialog({
     title: p.title,
     size: 'max-w-2xl',
     html: `
       <div class="space-y-4">
-        <div class="rounded-xl overflow-hidden bg-carcara-100">
+        <div class="rounded-xl overflow-hidden bg-carcara-100 relative">
           <img src="${imgUrl}" alt="${p.title}" class="w-full max-h-[55vh] object-contain mx-auto" />
         </div>
+
+        ${p.playableUrl ? `
+          <a href="${p.playableUrl}" target="_blank" rel="noopener"
+             class="flex items-center justify-between p-3 rounded-xl bg-sertao-900 text-carcara-100 hover:bg-sertao-800 transition">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">🎮</span>
+              <div>
+                <p class="text-xs font-bold text-carcara-300">Projeto Interativo / Jogo Disponível</p>
+                <p class="text-[11px] text-carcara-100/75 truncate max-w-xs">${p.playableUrl}</p>
+              </div>
+            </div>
+            <span class="btn-primary text-xs shrink-0">Jogar / Testar →</span>
+          </a>` : ''}
 
         <div class="flex items-center justify-between flex-wrap gap-2">
           <div id="postAuthorLink" class="flex items-center gap-2 cursor-pointer">
@@ -216,7 +240,7 @@ export async function showPostDetails(p, callbacks = {}) {
             </div>
             <div>
               <p class="text-sm font-semibold hover:text-carcara-700">${p.artist}</p>
-              <p class="text-xs text-sertao-700/60">${p.location || 'Piauí'} • <span class="capitalize">${p.tag}</span></p>
+              <p class="text-xs text-sertao-700/60 capitalize">${p.tag === 'jogos' ? 'Jogos / Game Art' : p.tag}</p>
             </div>
           </div>
 
@@ -227,7 +251,13 @@ export async function showPostDetails(p, callbacks = {}) {
           </div>
         </div>
 
-        ${p.description ? `<p class="text-sm text-sertao-800/90">${p.description}</p>` : ''}
+        ${(avail || specs.length) ? `
+          <div class="flex items-center flex-wrap gap-2 bg-carcara-50 border border-carcara-200 rounded-xl px-3 py-2 text-xs">
+            ${avail ? `<span class="font-semibold px-2.5 py-0.5 rounded-full ${avail.badge}">${avail.label}</span>` : ''}
+            ${specs.length ? `<span class="text-sertao-700/80"><i class="bi bi-info-circle mr-1 text-carcara-600"></i>${specs.join(' • ')}</span>` : ''}
+          </div>` : ''}
+
+        ${p.description ? `<p class="text-sm text-sertao-800/90 leading-relaxed">${p.description}</p>` : ''}
 
         <div class="border-t border-carcara-200 pt-3">
           <h5 class="text-xs font-bold uppercase tracking-wider text-sertao-700/70 mb-2">Comentários (${comments.length})</h5>
